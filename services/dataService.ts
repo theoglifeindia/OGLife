@@ -1,5 +1,5 @@
 import { db } from './firebase';
-import { collection, getDocs, doc, getDoc, addDoc, Timestamp, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, addDoc, Timestamp, setDoc, updateDoc, deleteDoc, query, limit } from 'firebase/firestore';
 import { Product, Order, BusinessInfo } from '../types';
 
 const DEFAULT_MOCK_PRODUCTS: Product[] = [
@@ -64,7 +64,12 @@ const DEFAULT_BUSINESS_INFO: BusinessInfo = {
   heroImage: "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1974&auto=format&fit=crop"
 };
 
-const USE_MOCK = true; 
+// Auto-detect if Firebase is properly configured via env vars
+const IS_FIREBASE_CONFIGURED = 
+  process.env.REACT_APP_FIREBASE_API_KEY && 
+  process.env.REACT_APP_FIREBASE_API_KEY !== "demo-key";
+
+const USE_MOCK = !IS_FIREBASE_CONFIGURED;
 
 const getLocalProducts = (): Product[] => {
   const saved = localStorage.getItem('og_life_products');
@@ -83,8 +88,15 @@ export const getBusinessInfo = async (): Promise<BusinessInfo> => {
   try {
     const docRef = doc(db, 'settings', 'businessInfo');
     const docSnap = await getDoc(docRef);
-    return docSnap.exists() ? docSnap.data() as BusinessInfo : DEFAULT_BUSINESS_INFO;
-  } catch {
+    if (docSnap.exists()) {
+      return docSnap.data() as BusinessInfo;
+    } else {
+      // Seed default info to cloud if it doesn't exist
+      await setDoc(docRef, DEFAULT_BUSINESS_INFO);
+      return DEFAULT_BUSINESS_INFO;
+    }
+  } catch (error) {
+    console.warn("Firestore error, falling back to local defaults:", error);
     return DEFAULT_BUSINESS_INFO;
   }
 };
@@ -105,10 +117,19 @@ export const getProducts = async (): Promise<Product[]> => {
   try {
     const querySnapshot = await getDocs(collection(db, 'products'));
     const products = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
-    if (products.length === 0) return DEFAULT_MOCK_PRODUCTS;
+    
+    if (products.length === 0) {
+      // Seed default products to cloud if empty
+      console.log("Seeding products to Firestore...");
+      for (const p of DEFAULT_MOCK_PRODUCTS) {
+        const { id, ...data } = p;
+        await addDoc(collection(db, 'products'), data);
+      }
+      return DEFAULT_MOCK_PRODUCTS;
+    }
     return products;
   } catch (error) {
-    console.warn("Firebase fetch failed, using mock data:", error);
+    console.warn("Firebase fetch failed, using local fallback:", error);
     return getLocalProducts();
   }
 };
@@ -137,9 +158,9 @@ export const getProductById = async (id: string): Promise<Product | undefined> =
 export const addProduct = async (product: Omit<Product, 'id'>): Promise<void> => {
   if (USE_MOCK) {
     const products = getLocalProducts();
-    const newProduct = { ...product, id: `mock-${Date.now()}` };
+    const newProduct = { ...product, id: `mock-${Date.now()}` } as Product;
     saveLocalProducts([...products, newProduct]);
-    return Promise.resolve();
+    return;
   }
   await addDoc(collection(db, 'products'), product);
 };
@@ -149,7 +170,7 @@ export const updateProduct = async (id: string, updates: Partial<Product>): Prom
     const products = getLocalProducts();
     const updatedProducts = products.map(p => p.id === id ? { ...p, ...updates } : p);
     saveLocalProducts(updatedProducts);
-    return Promise.resolve();
+    return;
   }
   await updateDoc(doc(db, 'products', id), updates);
 };
@@ -159,7 +180,7 @@ export const deleteProduct = async (id: string): Promise<void> => {
     const products = getLocalProducts();
     const filtered = products.filter(p => p.id !== id);
     saveLocalProducts(filtered);
-    return Promise.resolve();
+    return;
   }
   await deleteDoc(doc(db, 'products', id));
 };
@@ -172,7 +193,6 @@ export const createOrder = async (order: Omit<Order, 'id' | 'createdAt'>): Promi
   };
 
   if (USE_MOCK) {
-    console.log("Mock Order Created:", newOrder);
     return new Promise(resolve => setTimeout(() => resolve(`MOCK-ORDER-${Math.floor(Math.random() * 10000)}`), 1000));
   }
 
@@ -186,10 +206,10 @@ export const createOrder = async (order: Omit<Order, 'id' | 'createdAt'>): Promi
 
 export const seedProducts = async () => {
   if (USE_MOCK) {
-    alert("Reseting mock data to defaults...");
     saveLocalProducts(DEFAULT_MOCK_PRODUCTS);
     localStorage.removeItem('og_business_info');
     window.location.reload();
     return;
   }
+  // For production, you could add an admin-only seed button if needed
 };
