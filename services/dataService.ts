@@ -1,5 +1,5 @@
 import { db } from './firebase';
-import { collection, getDocs, doc, getDoc, addDoc, Timestamp, setDoc, updateDoc, deleteDoc, query, limit } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, addDoc, Timestamp, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Product, Order, BusinessInfo } from '../types';
 
 const DEFAULT_MOCK_PRODUCTS: Product[] = [
@@ -64,10 +64,18 @@ const DEFAULT_BUSINESS_INFO: BusinessInfo = {
   heroImage: "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1974&auto=format&fit=crop"
 };
 
-// Auto-detect if Firebase is properly configured via env vars
+const getEnv = (key: string): string | undefined => {
+  try {
+    return typeof process !== 'undefined' && process.env ? process.env[key] : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+// Only enable Firebase if a real API key is provided in Netlify Env Vars
 const IS_FIREBASE_CONFIGURED = 
-  process.env.REACT_APP_FIREBASE_API_KEY && 
-  process.env.REACT_APP_FIREBASE_API_KEY !== "demo-key";
+  getEnv('REACT_APP_FIREBASE_API_KEY') && 
+  getEnv('REACT_APP_FIREBASE_API_KEY') !== "demo-key";
 
 const USE_MOCK = !IS_FIREBASE_CONFIGURED;
 
@@ -91,7 +99,6 @@ export const getBusinessInfo = async (): Promise<BusinessInfo> => {
     if (docSnap.exists()) {
       return docSnap.data() as BusinessInfo;
     } else {
-      // Seed default info to cloud if it doesn't exist
       await setDoc(docRef, DEFAULT_BUSINESS_INFO);
       return DEFAULT_BUSINESS_INFO;
     }
@@ -119,8 +126,7 @@ export const getProducts = async (): Promise<Product[]> => {
     const products = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
     
     if (products.length === 0) {
-      // Seed default products to cloud if empty
-      console.log("Seeding products to Firestore...");
+      console.log("Seeding initial products to Firestore...");
       for (const p of DEFAULT_MOCK_PRODUCTS) {
         const { id, ...data } = p;
         await addDoc(collection(db, 'products'), data);
@@ -209,7 +215,5 @@ export const seedProducts = async () => {
     saveLocalProducts(DEFAULT_MOCK_PRODUCTS);
     localStorage.removeItem('og_business_info');
     window.location.reload();
-    return;
   }
-  // For production, you could add an admin-only seed button if needed
 };
