@@ -6,32 +6,43 @@ export interface Variant {
 export interface Product {
   id: string;
   name: string;
-  description: string; // No "Organic" allowed here
-  price: number; // Represents the "Starting from" price
+  description: string;
+  price: number; 
   images: string[];
   category: string;
-  variants: Variant[]; // Replaces simple weightOptions
+  variants: Variant[];
   stock: number;
   isFeatured?: boolean;
+}
+
+export interface BusinessInfo {
+  address: string;
+  phone: string;
+  email: string;
+  fssaiNo: string;
+  gstNo: string;
+  instagram?: string;
+  heroImage?: string;
 }
 
 export interface CartItem extends Product {
   quantity: number;
   selectedWeight: string;
-  unitPrice: number; // The specific price for the selected weight
+  unitPrice: number;
 }
 
 export interface Order {
   id?: string;
   customerName: string;
   email: string;
+  phone: string;
   address: string;
   city: string;
   zipCode: string;
   items: CartItem[];
   totalAmount: number;
   status: 'pending' | 'processing' | 'shipped';
-  createdAt: any; // Firestore Timestamp or Date
+  createdAt: any;
 }
 
 export interface Banner {

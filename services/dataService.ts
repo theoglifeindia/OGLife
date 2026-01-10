@@ -1,8 +1,7 @@
 import { db } from './firebase';
 import { collection, getDocs, doc, getDoc, addDoc, Timestamp, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { Product, Order } from '../types';
+import { Product, Order, BusinessInfo } from '../types';
 
-// --- MOCK DATA FOR DEMO PURPOSES ---
 const DEFAULT_MOCK_PRODUCTS: Product[] = [
   {
     id: '1',
@@ -10,9 +9,8 @@ const DEFAULT_MOCK_PRODUCTS: Product[] = [
     description: 'Our Toor Daal is traditionally sourced from certified farmers who strictly avoid harmful chemicals. Naturally grown and unpolished to retain maximum nutrition.',
     price: 180,
     images: [
-      'https://picsum.photos/seed/toor1/600/600',
-      'https://picsum.photos/seed/toor2/600/600',
-      'https://picsum.photos/seed/toor3/600/600'
+      'https://images.unsplash.com/photo-1585994794613-ad91f97f2143?q=80&w=2000&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1974&auto=format&fit=crop'
     ],
     category: 'Daals',
     variants: [
@@ -28,8 +26,7 @@ const DEFAULT_MOCK_PRODUCTS: Product[] = [
     description: 'Whole Red Lentils (Akkha Masoor) harvested with care. Lab-tested for safety to ensure zero pesticide residue. A perfect protein source.',
     price: 160,
     images: [
-      'https://picsum.photos/seed/masoor1/600/600',
-      'https://picsum.photos/seed/masoor2/600/600'
+      'https://images.unsplash.com/photo-1515942400420-2b98fed1f515?q=80&w=2000&auto=format&fit=crop'
     ],
     category: 'Daals',
     variants: [
@@ -45,9 +42,7 @@ const DEFAULT_MOCK_PRODUCTS: Product[] = [
     description: 'Premium Chana Daal sourced from natural farming belts. Free from artificial colors and polishing agents. Taste the authentic difference.',
     price: 140,
     images: [
-      'https://picsum.photos/seed/chana1/600/600',
-      'https://picsum.photos/seed/chana2/600/600',
-      'https://picsum.photos/seed/chana3/600/600'
+      'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1974&auto=format&fit=crop'
     ],
     category: 'Daals',
     variants: [
@@ -59,10 +54,18 @@ const DEFAULT_MOCK_PRODUCTS: Product[] = [
   }
 ];
 
-// Helper to determine if we should use mock data
+const DEFAULT_BUSINESS_INFO: BusinessInfo = {
+  address: "123 Earthy Roots Lane, Green Belt, Mumbai, Maharashtra 400001",
+  phone: "+91 98765 43210",
+  email: "support@theoglife.in",
+  fssaiNo: "12345678901234",
+  gstNo: "27AAAAA0000A1Z5",
+  instagram: "@theoglife.natural",
+  heroImage: "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1974&auto=format&fit=crop"
+};
+
 const USE_MOCK = true; 
 
-// LocalStorage Helper for Mock Data persistence
 const getLocalProducts = (): Product[] => {
   const saved = localStorage.getItem('og_life_products');
   return saved ? JSON.parse(saved) : DEFAULT_MOCK_PRODUCTS;
@@ -70,6 +73,28 @@ const getLocalProducts = (): Product[] => {
 
 const saveLocalProducts = (products: Product[]) => {
   localStorage.setItem('og_life_products', JSON.stringify(products));
+};
+
+export const getBusinessInfo = async (): Promise<BusinessInfo> => {
+  if (USE_MOCK) {
+    const saved = localStorage.getItem('og_business_info');
+    return saved ? JSON.parse(saved) : DEFAULT_BUSINESS_INFO;
+  }
+  try {
+    const docRef = doc(db, 'settings', 'businessInfo');
+    const docSnap = await getDoc(docRef);
+    return docSnap.exists() ? docSnap.data() as BusinessInfo : DEFAULT_BUSINESS_INFO;
+  } catch {
+    return DEFAULT_BUSINESS_INFO;
+  }
+};
+
+export const updateBusinessInfo = async (info: BusinessInfo): Promise<void> => {
+  if (USE_MOCK) {
+    localStorage.setItem('og_business_info', JSON.stringify(info));
+    return;
+  }
+  await setDoc(doc(db, 'settings', 'businessInfo'), info);
 };
 
 export const getProducts = async (): Promise<Product[]> => {
@@ -109,8 +134,6 @@ export const getProductById = async (id: string): Promise<Product | undefined> =
   }
 };
 
-// --- ADMIN FUNCTIONS ---
-
 export const addProduct = async (product: Omit<Product, 'id'>): Promise<void> => {
   if (USE_MOCK) {
     const products = getLocalProducts();
@@ -118,13 +141,7 @@ export const addProduct = async (product: Omit<Product, 'id'>): Promise<void> =>
     saveLocalProducts([...products, newProduct]);
     return Promise.resolve();
   }
-
-  try {
-    await addDoc(collection(db, 'products'), product);
-  } catch (error) {
-    console.error("Error adding product:", error);
-    throw error;
-  }
+  await addDoc(collection(db, 'products'), product);
 };
 
 export const updateProduct = async (id: string, updates: Partial<Product>): Promise<void> => {
@@ -134,14 +151,7 @@ export const updateProduct = async (id: string, updates: Partial<Product>): Prom
     saveLocalProducts(updatedProducts);
     return Promise.resolve();
   }
-
-  try {
-    const docRef = doc(db, 'products', id);
-    await updateDoc(docRef, updates);
-  } catch (error) {
-    console.error("Error updating product:", error);
-    throw error;
-  }
+  await updateDoc(doc(db, 'products', id), updates);
 };
 
 export const deleteProduct = async (id: string): Promise<void> => {
@@ -151,13 +161,7 @@ export const deleteProduct = async (id: string): Promise<void> => {
     saveLocalProducts(filtered);
     return Promise.resolve();
   }
-
-  try {
-    await deleteDoc(doc(db, 'products', id));
-  } catch (error) {
-    console.error("Error deleting product:", error);
-    throw error;
-  }
+  await deleteDoc(doc(db, 'products', id));
 };
 
 export const createOrder = async (order: Omit<Order, 'id' | 'createdAt'>): Promise<string> => {
@@ -176,7 +180,6 @@ export const createOrder = async (order: Omit<Order, 'id' | 'createdAt'>): Promi
     const docRef = await addDoc(collection(db, 'orders'), newOrder);
     return docRef.id;
   } catch (error) {
-    console.error("Error creating order:", error);
     throw new Error("Could not process order");
   }
 };
@@ -185,8 +188,8 @@ export const seedProducts = async () => {
   if (USE_MOCK) {
     alert("Reseting mock data to defaults...");
     saveLocalProducts(DEFAULT_MOCK_PRODUCTS);
+    localStorage.removeItem('og_business_info');
     window.location.reload();
     return;
   }
-  // Real firebase seeding logic omitted for brevity
 };

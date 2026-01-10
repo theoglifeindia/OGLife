@@ -1,21 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle, Sprout, ShieldCheck, ShoppingBag } from 'lucide-react';
-import { Product } from '../types';
-import { getProducts } from '../services/dataService';
+import { Product, BusinessInfo } from '../types';
+import { getProducts, getBusinessInfo } from '../services/dataService';
 
 const Home: React.FC = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [businessInfo, setBusinessInfo] = useState<BusinessInfo | null>(null);
 
   useEffect(() => {
-    const fetchFeatured = async () => {
-      const all = await getProducts();
-      // Filter featured, or just take the first 3 if none featured
-      const featured = all.filter(p => p.isFeatured);
-      setFeaturedProducts(featured.length > 0 ? featured.slice(0, 3) : all.slice(0, 3));
+    const fetchData = async () => {
+      const [allProducts, info] = await Promise.all([getProducts(), getBusinessInfo()]);
+      const featured = allProducts.filter(p => p.isFeatured);
+      setFeaturedProducts(featured.length > 0 ? featured.slice(0, 3) : allProducts.slice(0, 3));
+      setBusinessInfo(info);
     };
-    fetchFeatured();
+    fetchData();
   }, []);
+
+  const heroImage = businessInfo?.heroImage || "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1974&auto=format&fit=crop";
 
   return (
     <div className="bg-white w-full overflow-x-hidden">
@@ -29,7 +32,7 @@ const Home: React.FC = () => {
               Let's Pledge For
             </h2>
             <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-[#2c3e2e] font-bold leading-[1.1] mb-6">
-              ORGANIC <br/>
+              WHOLESOME <br/>
               <span className="text-brand-main text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-sans font-bold tracking-tight block mt-2">PESTICIDE-FREE FOOD</span>
             </h1>
             
@@ -65,8 +68,8 @@ const Home: React.FC = () => {
                  
                  {/* Main composition image */}
                  <img 
-                    src="https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1974&auto=format&fit=crop" 
-                    alt="Organic Basket" 
+                    src={heroImage} 
+                    alt="Authentic Produce Basket" 
                     className="relative z-10 w-full h-full object-contain drop-shadow-2xl hover:scale-105 transition duration-700 ease-out"
                  />
                  
