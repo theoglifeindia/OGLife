@@ -1,12 +1,16 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, CheckCircle, Sprout, ShieldCheck, ShoppingBag } from 'lucide-react';
+import { ArrowRight, CheckCircle, Sprout, ShieldCheck, ShoppingBag, Sparkles } from 'lucide-react';
 import { Product, BusinessInfo } from '../types';
 import { getProducts, getBusinessInfo } from '../services/dataService';
+// Standardized import for Gemini API
+import {GoogleGenAI} from "@google/genai";
 
 const Home: React.FC = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [businessInfo, setBusinessInfo] = useState<BusinessInfo | null>(null);
+  const [aiInsight, setAiInsight] = useState<string>('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -16,6 +20,21 @@ const Home: React.FC = () => {
       setBusinessInfo(info);
     };
     fetchData();
+
+    // Fetch AI-generated purity insight using Gemini
+    const fetchAiInsight = async () => {
+      try {
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const response = await ai.models.generateContent({
+          model: 'gemini-3-flash-preview',
+          contents: "Create a short, poetic 12-word quote about how unpolished, pesticide-free grains connect us to the soul of the soil.",
+        });
+        setAiInsight(response.text || '');
+      } catch (e) {
+        console.error("Gemini failed to generate insight:", e);
+      }
+    };
+    fetchAiInsight();
   }, []);
 
   const heroImage = businessInfo?.heroImage || "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1974&auto=format&fit=crop";
@@ -35,6 +54,16 @@ const Home: React.FC = () => {
               WHOLESOME <br/>
               <span className="text-brand-main text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-sans font-bold tracking-tight block mt-2">PESTICIDE-FREE FOOD</span>
             </h1>
+
+            {/* AI-Generated Insight Box */}
+            {aiInsight && (
+              <div className="mb-8 flex items-start gap-3 bg-brand-cream/40 p-5 rounded-2xl border border-brand-main/5 animate-fade-in max-w-md shadow-sm">
+                <Sparkles className="h-5 w-5 text-brand-gold shrink-0 mt-1" />
+                <p className="text-brand-dark/70 italic text-sm font-medium leading-relaxed font-serif">
+                  "{aiInsight}"
+                </p>
+              </div>
+            )}
             
             <div className="my-8 md:my-10 relative inline-block group">
                 <div className="bg-amber-400 text-brand-dark font-extrabold text-xs md:text-sm px-5 py-1.5 rounded-full uppercase tracking-widest inline-block mb-3 transform -rotate-2 group-hover:rotate-0 transition duration-300">

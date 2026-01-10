@@ -1,5 +1,3 @@
-import { db } from './firebase';
-import { collection, getDocs, doc, getDoc, addDoc, Timestamp, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Product, Order, BusinessInfo } from '../types';
 
 const DEFAULT_MOCK_PRODUCTS: Product[] = [
@@ -64,21 +62,6 @@ const DEFAULT_BUSINESS_INFO: BusinessInfo = {
   heroImage: "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1974&auto=format&fit=crop"
 };
 
-const getEnv = (key: string): string | undefined => {
-  try {
-    return typeof process !== 'undefined' && process.env ? process.env[key] : undefined;
-  } catch {
-    return undefined;
-  }
-};
-
-// Only enable Firebase if a real API key is provided in Netlify Env Vars
-const IS_FIREBASE_CONFIGURED = 
-  getEnv('REACT_APP_FIREBASE_API_KEY') && 
-  getEnv('REACT_APP_FIREBASE_API_KEY') !== "demo-key";
-
-const USE_MOCK = !IS_FIREBASE_CONFIGURED;
-
 const getLocalProducts = (): Product[] => {
   const saved = localStorage.getItem('og_life_products');
   return saved ? JSON.parse(saved) : DEFAULT_MOCK_PRODUCTS;
@@ -89,131 +72,49 @@ const saveLocalProducts = (products: Product[]) => {
 };
 
 export const getBusinessInfo = async (): Promise<BusinessInfo> => {
-  if (USE_MOCK) {
-    const saved = localStorage.getItem('og_business_info');
-    return saved ? JSON.parse(saved) : DEFAULT_BUSINESS_INFO;
-  }
-  try {
-    const docRef = doc(db, 'settings', 'businessInfo');
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      return docSnap.data() as BusinessInfo;
-    } else {
-      await setDoc(docRef, DEFAULT_BUSINESS_INFO);
-      return DEFAULT_BUSINESS_INFO;
-    }
-  } catch (error) {
-    console.warn("Firestore error, falling back to local defaults:", error);
-    return DEFAULT_BUSINESS_INFO;
-  }
+  const saved = localStorage.getItem('og_business_info');
+  return saved ? JSON.parse(saved) : DEFAULT_BUSINESS_INFO;
 };
 
 export const updateBusinessInfo = async (info: BusinessInfo): Promise<void> => {
-  if (USE_MOCK) {
-    localStorage.setItem('og_business_info', JSON.stringify(info));
-    return;
-  }
-  await setDoc(doc(db, 'settings', 'businessInfo'), info);
+  localStorage.setItem('og_business_info', JSON.stringify(info));
 };
 
 export const getProducts = async (): Promise<Product[]> => {
-  if (USE_MOCK) {
-    return new Promise(resolve => setTimeout(() => resolve(getLocalProducts()), 600));
-  }
-
-  try {
-    const querySnapshot = await getDocs(collection(db, 'products'));
-    const products = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
-    
-    if (products.length === 0) {
-      console.log("Seeding initial products to Firestore...");
-      for (const p of DEFAULT_MOCK_PRODUCTS) {
-        const { id, ...data } = p;
-        await addDoc(collection(db, 'products'), data);
-      }
-      return DEFAULT_MOCK_PRODUCTS;
-    }
-    return products;
-  } catch (error) {
-    console.warn("Firebase fetch failed, using local fallback:", error);
-    return getLocalProducts();
-  }
+  return new Promise(resolve => setTimeout(() => resolve(getLocalProducts()), 600));
 };
 
 export const getProductById = async (id: string): Promise<Product | undefined> => {
-  if (USE_MOCK) {
-    const products = getLocalProducts();
-    return new Promise(resolve => 
-      setTimeout(() => resolve(products.find(p => p.id === id)), 400)
-    );
-  }
-
-  try {
-    const docRef = doc(db, 'products', id);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      return { id: docSnap.id, ...docSnap.data() } as Product;
-    }
-    return undefined;
-  } catch (error) {
-    const products = getLocalProducts();
-    return products.find(p => p.id === id);
-  }
+  const products = getLocalProducts();
+  return new Promise(resolve => 
+    setTimeout(() => resolve(products.find(p => p.id === id)), 400)
+  );
 };
 
 export const addProduct = async (product: Omit<Product, 'id'>): Promise<void> => {
-  if (USE_MOCK) {
-    const products = getLocalProducts();
-    const newProduct = { ...product, id: `mock-${Date.now()}` } as Product;
-    saveLocalProducts([...products, newProduct]);
-    return;
-  }
-  await addDoc(collection(db, 'products'), product);
+  const products = getLocalProducts();
+  const newProduct = { ...product, id: `local-${Date.now()}` } as Product;
+  saveLocalProducts([...products, newProduct]);
 };
 
 export const updateProduct = async (id: string, updates: Partial<Product>): Promise<void> => {
-  if (USE_MOCK) {
-    const products = getLocalProducts();
-    const updatedProducts = products.map(p => p.id === id ? { ...p, ...updates } : p);
-    saveLocalProducts(updatedProducts);
-    return;
-  }
-  await updateDoc(doc(db, 'products', id), updates);
+  const products = getLocalProducts();
+  const updatedProducts = products.map(p => p.id === id ? { ...p, ...updates } : p);
+  saveLocalProducts(updatedProducts);
 };
 
 export const deleteProduct = async (id: string): Promise<void> => {
-  if (USE_MOCK) {
-    const products = getLocalProducts();
-    const filtered = products.filter(p => p.id !== id);
-    saveLocalProducts(filtered);
-    return;
-  }
-  await deleteDoc(doc(db, 'products', id));
+  const products = getLocalProducts();
+  const filtered = products.filter(p => p.id !== id);
+  saveLocalProducts(filtered);
 };
 
 export const createOrder = async (order: Omit<Order, 'id' | 'createdAt'>): Promise<string> => {
-  const newOrder = {
-    ...order,
-    createdAt: Timestamp.now(),
-    status: 'pending'
-  };
-
-  if (USE_MOCK) {
-    return new Promise(resolve => setTimeout(() => resolve(`MOCK-ORDER-${Math.floor(Math.random() * 10000)}`), 1000));
-  }
-
-  try {
-    const docRef = await addDoc(collection(db, 'orders'), newOrder);
-    return docRef.id;
-  } catch (error) {
-    throw new Error("Could not process order");
-  }
+  return new Promise(resolve => setTimeout(() => resolve(`LOCAL-ORDER-${Math.floor(Math.random() * 10000)}`), 1000));
 };
 
 export const seedProducts = async () => {
-  if (USE_MOCK) {
-    saveLocalProducts(DEFAULT_MOCK_PRODUCTS);
-    localStorage.removeItem('og_business_info');
-    window.location.reload();
-  }
+  saveLocalProducts(DEFAULT_MOCK_PRODUCTS);
+  localStorage.removeItem('og_business_info');
+  window.location.reload();
 };
