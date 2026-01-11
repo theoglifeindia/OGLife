@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="The OG Life - Premium pesticide-free, farm-fresh staples sourced ethically for your health." />
     <title>The OG Life | Pure, Authentic, Farm-Fresh</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,6 +31,38 @@
             },
             animation: {
               'bounce-slow': 'bounce 3s infinite',
+              'fade-in': 'fadeIn 1s ease-out forwards',
+              'fade-in-up': 'fadeInUp 1s ease-out forwards',
+              'slide-in-left': 'slideInLeft 1s ease-out forwards',
+              'slide-in-right': 'slideInRight 1s ease-out forwards',
+              'pop-in': 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+              'float': 'float 6s ease-in-out infinite',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              },
+              fadeInUp: {
+                '0%': { opacity: '0', transform: 'translateY(20px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              slideInLeft: {
+                '0%': { opacity: '0', transform: 'translateX(-100px)' },
+                '100%': { opacity: '1', transform: 'translateX(0)' },
+              },
+              slideInRight: {
+                '0%': { opacity: '0', transform: 'translateX(100px)' },
+                '100%': { opacity: '1', transform: 'translateX(0)' },
+              },
+              popIn: {
+                '0%': { opacity: '0', transform: 'scale(0.5)' },
+                '100%': { opacity: '1', transform: 'scale(1)' },
+              },
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-20px)' },
+              }
             }
           }
         }
@@ -38,14 +71,14 @@
     <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@19.0.0",
-    "react-dom": "https://esm.sh/react-dom@19.0.0",
-    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
-    "react-router-dom": "https://esm.sh/react-router-dom@7.1.1?deps=react@19.0.0,react-dom@19.0.0",
-    "lucide-react": "https://esm.sh/lucide-react@0.469.0?deps=react@19.0.0",
+    "react": "https://esm.sh/react@18.3.1",
+    "react-dom": "https://esm.sh/react-dom@18.3.1",
+    "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+    "react-router-dom": "https://esm.sh/react-router-dom@6.28.0?deps=react@18.3.1,react-dom@18.3.1",
+    "lucide-react": "https://esm.sh/lucide-react@0.469.0?deps=react@18.3.1",
     "@google/genai": "https://esm.sh/@google/genai@1.35.0",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+    "react-dom/": "https://esm.sh/react-dom@18.3.1/",
+    "react/": "https://esm.sh/react@18.3.1/"
   }
 }
 </script>

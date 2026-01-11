@@ -45,9 +45,9 @@ const Home: React.FC = () => {
       <section className="relative bg-[#fdfcf7] min-h-[calc(100vh-80px)] flex items-center overflow-hidden py-12 md:py-0">
         <div className="container max-w-7xl mx-auto px-6 lg:px-8 relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 items-center h-full">
           
-          {/* Text Content */}
-          <div className="text-center md:text-left order-2 md:order-1 flex flex-col items-center md:items-start">
-            <h2 className="text-brand-light font-sans tracking-[0.3em] uppercase font-bold text-xs md:text-sm mb-6 animate-fade-in-up">
+          {/* Text Content - Slides in from Left */}
+          <div className="text-center md:text-left order-2 md:order-1 flex flex-col items-center md:items-start animate-slide-in-left opacity-0 [animation-fill-mode:forwards]">
+            <h2 className="text-brand-light font-sans tracking-[0.3em] uppercase font-bold text-xs md:text-sm mb-6">
               Let's Pledge For
             </h2>
             <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-[#2c3e2e] font-bold leading-[1.1] mb-6">
@@ -65,8 +65,8 @@ const Home: React.FC = () => {
               </div>
             )}
             
-            <div className="my-8 md:my-10 relative inline-block group">
-                <div className="bg-amber-400 text-brand-dark font-extrabold text-xs md:text-sm px-5 py-1.5 rounded-full uppercase tracking-widest inline-block mb-3 transform -rotate-2 group-hover:rotate-0 transition duration-300">
+            <div className="my-8 md:my-10 relative inline-block group animate-pop-in opacity-0 [animation-delay:300ms] [animation-fill-mode:forwards]">
+                <div className="bg-amber-400 text-brand-dark font-extrabold text-xs md:text-sm px-5 py-1.5 rounded-full uppercase tracking-widest inline-block mb-3 transform -rotate-2 group-hover:rotate-0 transition duration-300 shadow-md">
                     New Year Sale
                 </div>
                 <div className="flex items-baseline justify-center md:justify-start">
@@ -78,7 +78,7 @@ const Home: React.FC = () => {
                 </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-5 items-center mt-4 w-full md:w-auto">
+            <div className="flex flex-col sm:flex-row gap-5 items-center mt-4 w-full md:w-auto animate-fade-in-up opacity-0 [animation-delay:600ms] [animation-fill-mode:forwards]">
                 <div className="border-2 border-dashed border-brand-gold px-8 py-3 rounded-sm bg-white w-full sm:w-auto">
                     <span className="text-gray-500 text-sm mr-2 font-medium uppercase tracking-wide">Use Code:</span>
                     <span className="font-bold text-brand-dark text-xl">PLEDGE28</span>
@@ -89,8 +89,8 @@ const Home: React.FC = () => {
             </div>
           </div>
 
-          {/* Hero Image Composition */}
-          <div className="relative h-full flex items-center justify-center order-1 md:order-2">
+          {/* Hero Image Composition - Slides in from Right */}
+          <div className="relative h-full flex items-center justify-center order-1 md:order-2 animate-slide-in-right opacity-0 [animation-fill-mode:forwards]">
              <div className="relative w-full max-w-sm md:max-w-xl aspect-square">
                  {/* Decorative background circle */}
                  <div className="absolute inset-0 bg-brand-light/20 rounded-full scale-90 blur-3xl animate-pulse"></div>
@@ -103,7 +103,7 @@ const Home: React.FC = () => {
                  />
                  
                  {/* Floating badge */}
-                 <div className="absolute top-0 right-0 md:top-10 md:-right-4 bg-white p-4 rounded-full shadow-xl z-20 animate-bounce-slow">
+                 <div className="absolute top-0 right-0 md:top-10 md:-right-4 bg-white p-4 rounded-full shadow-xl z-20 animate-float">
                     <ShieldCheck className="w-8 h-8 md:w-10 md:h-10 text-brand-main" />
                  </div>
              </div>
